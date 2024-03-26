@@ -12,10 +12,10 @@ from tqdm import tqdm
 
 
 
-EPISODES=100
+EPISODES=200
 EPSILON_DECAY=0.99975
 MIN_EPSILON=0.001
-AGGREGATE_STATS_EVERY=10
+AGGREGATE_STATS_EVERY=50
 MIN_REWARD=-1
 MODEL_NAME="427x1"
 SHOW_BOARD=False
@@ -37,7 +37,7 @@ def get_reward(new_obs,current_obs):
         if old_player_pieces[i] == 0 and new_player_pieces[i] != 0:#move out of home
             reward += 0.25
         if old_player_pieces[i] != 0 and new_player_pieces[i] == 0:# piece died
-            reward -= 0.5
+            reward -= 1
         if old_player_pieces[i] <= 53 and new_player_pieces[i] >= 54:#move into goal area
             reward += 0.4
         if old_player_pieces[i] != 59 and new_player_pieces[i] == 59:#move to goal
@@ -126,8 +126,9 @@ if __name__=="__main__":
         os.makedirs('models')
     agent=LudoAgent()
     ghosts = []
+    wins=0
     ep_rewards=[-200]
-    epsilon=0.1#TODO change back to 1
+    epsilon=1#TODO change back to 1
     start_time = time.time()
     g = ludopy.Game(ghost_players=ghosts)
     for episode in tqdm(range(1,EPISODES+1),ascii=True, unit="episode"):
@@ -136,15 +137,18 @@ if __name__=="__main__":
         step=1
 
         episode_reward, step, winner_of_game, overshoots=single_game(g,step,epsilon)
-
+        if winner_of_game==0:
+            wins+=1
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
 
         if not episode % AGGREGATE_STATS_EVERY or episode == 1:
+            win_rate=wins/AGGREGATE_STATS_EVERY
+            wins=0
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
             min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
             max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
+            agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon, win_rate=win_rate)
 
             # Save model, but only when min reward (or average reward) is greater or equal to a set value
             if average_reward >= 4:

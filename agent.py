@@ -10,8 +10,8 @@ import random
 
 REPLAY_MEM_SIZE=50_000
 MIN_REPLAY_MEM_SIZE=1_000
-MINIBATCH_SIZE=64
-UPDATE_TARGET_EVERY=5
+MINIBATCH_SIZE=64 #how many samples to use for training
+UPDATE_TARGET_EVERY=10 #end of episodes
 DISCOUNT=0.99
 LOAD_MODEL=None
 
@@ -52,7 +52,7 @@ class LudoAgent:
       model.add(keras.layers.Input(shape=(self.input_size,)))
       model.add(keras.layers.Dense(512,activation="relu"))
       model.add(keras.layers.Dense(64,activation="relu"))
-      model.add(keras.layers.Dense(output_size))
+      model.add(keras.layers.Dense(output_size,activation="relu"))
       model.compile(loss="mse", optimizer=keras.optimizers.Adam(learning_rate=0.001), metrics=['accuracy'])
     return model
     
