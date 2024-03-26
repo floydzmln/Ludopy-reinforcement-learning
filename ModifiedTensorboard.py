@@ -1,7 +1,7 @@
 from keras.callbacks import TensorBoard
 import tensorflow as tf
 import os
-MODEL_NAME="427x1"
+MODEL_NAME="WithLSTM"
 #...
 
 # Own Tensorboard class

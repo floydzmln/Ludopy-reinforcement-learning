@@ -13,11 +13,11 @@ from tqdm import tqdm
 
 
 EPISODES=200
-EPSILON_DECAY=0.99975
+EPSILON_DECAY=0.995#adjust so that it fits with the total episodes your aiming for
 MIN_EPSILON=0.001
 AGGREGATE_STATS_EVERY=50
 MIN_REWARD=-1
-MODEL_NAME="427x1"
+MODEL_NAME="WithLSTM"
 SHOW_BOARD=False
 
 def get_reward(new_obs,current_obs):
@@ -127,8 +127,8 @@ if __name__=="__main__":
     agent=LudoAgent()
     ghosts = []
     wins=0
-    ep_rewards=[-200]
-    epsilon=1#TODO change back to 1
+    ep_rewards=[0]
+    epsilon=1
     start_time = time.time()
     g = ludopy.Game(ghost_players=ghosts)
     for episode in tqdm(range(1,EPISODES+1),ascii=True, unit="episode"):
@@ -151,7 +151,7 @@ if __name__=="__main__":
             agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon, win_rate=win_rate)
 
             # Save model, but only when min reward (or average reward) is greater or equal to a set value
-            if average_reward >= 4:
+            if average_reward >= 7:
                 agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
         # Decay epsilon

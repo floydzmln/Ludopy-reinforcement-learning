@@ -15,7 +15,7 @@ UPDATE_TARGET_EVERY=10 #end of episodes
 DISCOUNT=0.99
 LOAD_MODEL=None
 
-MODEL_NAME="427x1"
+MODEL_NAME="WithLSTM"
 
 class LudoAgent:
   def __init__(self):
@@ -49,10 +49,10 @@ class LudoAgent:
       output_size=4
       # Define your NN architecture here (using Keras)
       model=keras.models.Sequential()
-      model.add(keras.layers.Input(shape=(self.input_size,)))
-      model.add(keras.layers.Dense(512,activation="relu"))
-      model.add(keras.layers.Dense(64,activation="relu"))
-      model.add(keras.layers.Dense(output_size,activation="relu"))
+      model.add(keras.layers.Input(shape=(self.input_size,1)))
+      model.add(keras.layers.LSTM(128))
+      model.add(keras.layers.Dense(64,activation="linear"))
+      model.add(keras.layers.Dense(output_size,activation="linear"))
       model.compile(loss="mse", optimizer=keras.optimizers.Adam(learning_rate=0.001), metrics=['accuracy'])
     return model
     
@@ -73,9 +73,11 @@ class LudoAgent:
         if safe_tile==player_pieces[i]:
           safe_zones_occupied+=1
     state_representation[240]=safe_zones_occupied/4
+    #furthest enemy pieces
     state_representation[max(enemy_pieces[0])+241]=1
     state_representation[max(enemy_pieces[1])+301]=1
     state_representation[max(enemy_pieces[2])+361]=1
+
     state_representation[dice+420]=1
     return state_representation
 
