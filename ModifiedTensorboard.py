@@ -1,7 +1,7 @@
 from keras.callbacks import TensorBoard
 import tensorflow as tf
 import os
-MODEL_NAME="WithLSTM"
+MODEL_NAME="DenseOnly"
 #...
 
 # Own Tensorboard class
