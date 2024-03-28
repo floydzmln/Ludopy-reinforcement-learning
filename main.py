@@ -1,22 +1,18 @@
-import copy
-import sys
 import time
 import os
 import numpy as np
-import pandas as pd
-from matplotlib import pyplot as plt
 from agent import LudoAgent
 import cv2
 import ludopy
 from tqdm import tqdm
 
 
-EPISODES = 200
+EPISODES = 1000
 EPSILON_DECAY = 0.995  # adjust so that it fits with the total episodes your aiming for
 MIN_EPSILON = 0.001
-AGGREGATE_STATS_EVERY = 50
+AGGREGATE_STATS_EVERY = 20
 MIN_REWARD = -1
-MODEL_NAME = "DenseOnly"
+MODEL_NAME = "ConState"
 SHOW_BOARD = False
 
 
@@ -96,9 +92,7 @@ def single_game(g, step, epsilon):
         ), player_i = current_obs
 
         if player_i != 0:  # other players turn
-            _, _, _, _, _, there_is_a_winner = g.answer_observation(
-                move_rand(move_pieces)
-            )
+            _, _, _, _, _, there_is_a_winner = g.answer_observation(move_rand(move_pieces))
             continue
         else:  # agent player
             if np.random.random() > epsilon:
@@ -180,7 +174,7 @@ if __name__ == "__main__":
             )
 
             # Save model, but only when min reward (or average reward) is greater or equal to a set value
-            if average_reward >= 7:
+            if average_reward >= 4:
                 agent.model.save(
                     f"models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model"
                 )
