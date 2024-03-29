@@ -12,9 +12,8 @@ MIN_REPLAY_MEM_SIZE = 1_000
 MINIBATCH_SIZE = 64  # how many samples to use for training
 UPDATE_TARGET_EVERY = 5  # end of episodes
 DISCOUNT = 0.99
-LOAD_MODEL = "models/ConState____13.50max____6.35avg____0.90min__1711628047.model"
-
-MODEL_NAME = "ConState"
+LOAD_MODEL = None
+LOGS_NAME = "append"
 
 
 class LudoAgent:
@@ -29,7 +28,7 @@ class LudoAgent:
 
         self.replay_memory = deque(maxlen=REPLAY_MEM_SIZE)
         self.tensorboard = ModifiedTensorBoard(
-            log_dir=f"logs/{MODEL_NAME}-{int(time.time())}"
+            log_dir=f"logs/{LOGS_NAME}-{int(time.time())}"
         )
 
         self.target_update_counter = 0

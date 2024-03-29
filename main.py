@@ -7,13 +7,14 @@ import ludopy
 from tqdm import tqdm
 
 
-EPISODES = 1000
+EPISODES = 10
 EPSILON_DECAY = 0.995  # adjust so that it fits with the total episodes your aiming for
 MIN_EPSILON = 0.001
 AGGREGATE_STATS_EVERY = 20
 MIN_REWARD = -1
-MODEL_NAME = "ConState"
-SHOW_BOARD = False
+MODEL_NAME = "noTraining2D"
+SHOW_BOARD = True
+TRAINING=False
 
 
 def get_reward(new_obs, current_obs):
@@ -113,16 +114,17 @@ def single_game(g, step, epsilon):
                 cv2.waitKey(0)
 
             # Every step we update replay memory and train main network
-            agent.update_replay_memory(
-                (
-                    agent.get_state(current_obs[0]),
-                    action,
-                    reward,
-                    agent.get_state(new_obs),
-                    there_is_a_winner,
+            if TRAINING:
+                agent.update_replay_memory(
+                    (
+                        agent.get_state(current_obs[0]),
+                        action,
+                        reward,
+                        agent.get_state(new_obs),
+                        there_is_a_winner,
+                    )
                 )
-            )
-            agent.train(there_is_a_winner, step)
+                agent.train(there_is_a_winner, step)
             current_obs = new_obs
             step += 1
 
@@ -143,7 +145,7 @@ if __name__ == "__main__":
     ghosts = []
     wins = 0
     ep_rewards = [0]
-    epsilon = 1
+    epsilon = MIN_EPSILON
     start_time = time.time()
     g = ludopy.Game(ghost_players=ghosts)
     for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit="episode"):
@@ -174,7 +176,7 @@ if __name__ == "__main__":
             )
 
             # Save model, but only when min reward (or average reward) is greater or equal to a set value
-            if average_reward >= 4:
+            if average_reward >= 6 and TRAINING:
                 agent.model.save(
                     f"models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model"
                 )
