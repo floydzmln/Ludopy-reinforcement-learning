@@ -1,5 +1,5 @@
 # DQN with Ludopy
-This project uses DQN and regular Qlearning to train an ai player in the game of LUDO, it was part of the AI2 course at SDU. The main.py and agent.py contain the DQN implementation and the qlearning.py the Q-learing implementation.
+This project uses DQN and regular Q-learning to train an ai player in the game of LUDO, it was part of the AI2 course at SDU. The main.py and agent.py contain the DQN implementation and the qlearning.py the Q-learning implementation.
 
 ## Credits
 The LUDOpy library can be found here: https://github.com/SimonLBSoerensen/LUDOpy.
