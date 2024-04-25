@@ -7,13 +7,13 @@ import ludopy
 from tqdm import tqdm
 
 
-EPISODES = 10
-EPSILON_DECAY = 0.995  # adjust so that it fits with the total episodes your aiming for
+EPISODES = 500
+EPSILON_DECAY = 0.996  # adjust so that it fits with the total episodes your aiming for
 MIN_EPSILON = 0.001
-AGGREGATE_STATS_EVERY = 20
+AGGREGATE_STATS_EVERY = 50
 MIN_REWARD = -1
-MODEL_NAME = "noTraining2D"
-SHOW_BOARD = True
+MODEL_NAME = "lstm-cont"
+SHOW_BOARD = False
 TRAINING=False
 
 
@@ -145,7 +145,9 @@ if __name__ == "__main__":
     ghosts = []
     wins = 0
     ep_rewards = [0]
-    epsilon = MIN_EPSILON
+    epsilon=0
+    if TRAINING:
+        epsilon = 1
     start_time = time.time()
     g = ludopy.Game(ghost_players=ghosts)
     for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit="episode"):

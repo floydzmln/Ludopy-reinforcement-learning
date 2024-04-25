@@ -12,8 +12,8 @@ MIN_REPLAY_MEM_SIZE = 1_000
 MINIBATCH_SIZE = 64  # how many samples to use for training
 UPDATE_TARGET_EVERY = 5  # end of episodes
 DISCOUNT = 0.99
-LOAD_MODEL = None
-LOGS_NAME = "append"
+LOAD_MODEL = "models/lstm-cont____12.45max____6.37avg____2.95min__1711796867.model"
+LOGS_NAME = "noTrain-lstm_eval"
 
 
 class LudoAgent:
@@ -52,10 +52,7 @@ class LudoAgent:
             # Define your NN architecture here (using Keras)
             model = keras.models.Sequential()
             model.add(keras.layers.Input(shape=(self.input_size, 1)))
-            model.add(keras.layers.Dropout(0.2))
-            model.add(keras.layers.Dense(9, activation="linear"))
-            model.add(keras.layers.Dropout(0.2))
-            model.add(keras.layers.Dense(6, activation="linear"))
+            model.add(keras.layers.LSTM(units=9))
             model.add(keras.layers.Dense(output_size, activation="linear"))
             model.compile(
                 loss="mse",
