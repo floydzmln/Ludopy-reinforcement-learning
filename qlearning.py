@@ -14,7 +14,7 @@ EPSILON_DECAY = 0.99975  # adjust so that it fits with the total episodes your a
 MIN_EPSILON = 0.001
 AGGREGATE_STATS_EVERY = 100
 MIN_REWARD = -1
-MODEL_NAME = "QLudo"
+MODEL_NAME = "QLudo_20k_lr0.001"
 SHOW_BOARD = False
 DISCOUNT = 0.99
 LOAD_MODEL = None
@@ -70,7 +70,6 @@ class LudoAgent:
         return self.abstract_ludo_state(state)
     
     def abstract_ludo_state(self,state):
-        # Define zones on the board (replace with your specific zone definitions)
         starting_zone = [0]
         safe_zone = [1, 9, 22, 35, 48, 53, 53]
         star_zone=[5,12,18,25,31,38,44,51] 
@@ -105,9 +104,9 @@ class LudoAgent:
         # Enemy threat abstraction (replace with your threat categorization logic)
         enemy_threats = []
         for distance in state["enemy_distances"]:
-            if distance < 6:
+            if distance <= 6:
                 enemy_threats.append("close")
-            elif distance < 12:
+            elif distance <= 12:
                 enemy_threats.append("mid")
             else:
                 enemy_threats.append("far")
@@ -115,7 +114,6 @@ class LudoAgent:
         abstracted_state["enemy2_threat"] = enemy_threats[1]
         abstracted_state["enemy3_threat"] = enemy_threats[2]
         # Add other features as needed (number of pieces in home track, dice outcome)
-        abstracted_state["safe_zones"] = state["safe_zones"]
         abstracted_state["dice_outcome"] = state["dice_outcome"]
         return abstracted_state
 
@@ -123,8 +121,8 @@ class LudoAgent:
         hashable_state=frozenset(state.items())
         if hashable_state not in self.qtable:
             self.qtable[hashable_state] = {action: 0 for action in self.get_possible_actions()}
-        q=self.qtable[hashable_state].values()
-        return list(q)
+        q=list(self.qtable[hashable_state].values())
+        return q
     
     def train(self,state,action,reward,new_state):
         hashable_state=frozenset(state.items())
@@ -138,12 +136,21 @@ class LudoAgent:
 
         self.qtable[hashable_state][action] = self.qtable[hashable_state][action] + self.learning_rate * (
             reward + DISCOUNT * max(self.qtable[hashable_new_state].values()) - self.qtable[hashable_state][action])
-        
 
     def get_possible_actions(self):
         possible_actions = [0,1,2,3]
         return possible_actions
-
+    
+    def calculate_td_error(self,state, action, reward, next_state):
+        hashable_state=frozenset(state.items())
+        hashable_new_state=frozenset(next_state.items())
+        # Current Q-value
+        current_q = self.qtable[hashable_state][action]   
+        # Maximum Q-value for the next state
+        max_next_q = np.max(list(self.qtable[hashable_new_state].values()))   
+        # TD error
+        td_error = reward + DISCOUNT * max_next_q - current_q
+        return td_error
 
 
 def get_reward(new_obs, current_obs):
@@ -243,6 +250,7 @@ def single_game(g, step, epsilon):
 
             if TRAINING:
                 agent.train(agent.get_state(current_obs[0]),action,reward,agent.get_state(new_obs))
+                td_error=agent.calculate_td_error(agent.get_state(current_obs[0]),action,reward,agent.get_state(new_obs))
             current_obs = new_obs
             step += 1
 
@@ -252,7 +260,7 @@ def single_game(g, step, epsilon):
     # print("Saving game video")
     # g.save_hist_video("game_video.mp4")
 
-    return episode_reward, step, g.get_winner_of_game()
+    return episode_reward, step, g.get_winner_of_game(), td_error
 
 
 if __name__ == "__main__":
@@ -263,7 +271,10 @@ if __name__ == "__main__":
     ghosts = []
     wins = 0
     ep_rewards = [0]
-    epsilon = 1
+    epsilon = 0
+    if TRAINING:
+        epsilon = 1
+    td_errors=[]
     start_time = time.time()
     g = ludopy.Game(ghost_players=ghosts)
     for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit="episode"):
@@ -271,13 +282,18 @@ if __name__ == "__main__":
         episode_reward = 0
         step = 1
 
-        episode_reward, step, winner_of_game = single_game(g, step, epsilon)
+        episode_reward, step, winner_of_game,td_error = single_game(g, step, epsilon)
+
+        td_errors.append(td_error**2)
+
         if winner_of_game == 0:
             wins += 1
         # Append episode reward to a list and log stats (every given number of episodes)
         ep_rewards.append(episode_reward)
 
         if not episode % AGGREGATE_STATS_EVERY or episode == 1:
+            mean_squared_td_error = np.mean(td_errors)
+            td_errors.clear()
             win_rate = wins / AGGREGATE_STATS_EVERY
             wins = 0
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:]) / len(ep_rewards[-AGGREGATE_STATS_EVERY:])
@@ -289,6 +305,7 @@ if __name__ == "__main__":
                 reward_max=max_reward,
                 epsilon=epsilon,
                 win_rate=win_rate,
+                mean_squared_td_error=mean_squared_td_error
             )
 
             # Save model, but only when min reward (or average reward) is greater or equal to a set value
